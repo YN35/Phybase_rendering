@@ -18,6 +18,8 @@ class Camera():
         self.hight = 200
         self.fov = 90
         self._main_cam_dir = torch.tensor([5,5,5],device=self.device,dtype=self.dtype)
+        self._main_cam_dir = self._main_cam_dir / torch.norm(self._main_cam_dir)
+        self._view_up = torch.tensor([1,0,0],device=self.device,dtype=self.dtype)#カメラをどっちを上とするか
         self.void = torch.tensor([0,0,0],device=self.device,dtype=self.dtype)
         self.num_sg = 1
     
@@ -25,11 +27,19 @@ class Camera():
         """
         dads
         """
+        w_ini = math.sin(math.radians(self.fov / 2))
+        w = w_ini
+        h = w_ini * (self.hight / self.width)
+        w_delta = w_ini / (self.hight / 2)
+        h_delta = w_ini / (self.width / 2)
         # _cam_dir = torch.tensor([-1,-1,-1],device=self.device,dtype=self.dtype)
         # _cam_dir = _cam_dir / torch.norm(_cam_dir)
         # print(self.get_pixel_color(torch.tensor([5,5,5],device=self.device,dtype=self.dtype), _cam_dir, 1000))
-        for x in range(self.width):
-            for y in range(self.hight):
+        for x_n in range(self.width):
+            for y_n in range(self.hight):
+                
+            w = w + w_delta
+            h = h + h_delta
                 
         
             
