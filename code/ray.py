@@ -1,5 +1,5 @@
 import torch
-import util as utl
+import util
 from object.shape import Shape
 from object.material import Material
 
@@ -21,7 +21,7 @@ class Ray():
         _x_cam : Tensor
             カメラの座標
         _cam_dir : Tensor
-            カメラの向き
+            カメラの向き(単位ベクトル)
         epsilon : float (0.001)
             求める精度、許す誤差
             
@@ -30,12 +30,14 @@ class Ray():
             _x : 光線と面が交差する点
         """
         sdf = shape.sdf(_x_cam)
-        _x = _x_cam + _cam_dir * sdf
+        _x = _x_cam + (_cam_dir * sdf)
         sdf = shape.sdf(_x)
         
         while sdf > epsilon:
             _x = _x + (_cam_dir * sdf)
             sdf = shape.sdf(_x)
+            if sdf == torch.tensor(float('inf'),device=self.device,dtype=self.dtype):
+                return 'nothing'
             
         return _x
         
@@ -57,6 +59,7 @@ class Ray():
         """
         _l_i = torch.tensor([0,0,0],device=self.device,dtype=self.dtype)
         for i in range(num_sg):
-            _l_i = mate.env_sphere_gaussian(_omega_i,i) + _l_i
+            _lobe_dir, sharpness, _intensity = mate.env_sphere_gaussian(i)
+            _l_i = util.sphere_gaussian(_omega_i, _lobe_dir, sharpness, _intensity) + _l_i
         
         return _l_i

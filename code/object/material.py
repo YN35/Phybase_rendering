@@ -7,12 +7,15 @@ shape = Shape()
 class Material():
     
     def __init__(self) -> None:
-        self._lobe_dir = 
-        self.sharpness = 
-        self._intensity = 
+        self.dtype = torch.float
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        
+        self._lobe_dir = torch.tensor([1,0,0],device=self.device,dtype=self.dtype)
+        self.sharpness = 0.5
+        self._intensity = torch.tensor([0.1,0.5,0.5],device=self.device,dtype=self.dtype)
         
     def albedo(self,_x):
-        pass
+        return torch.tensor([1,1,1],device=self.device,dtype=self.dtype) 
     
     def brdf(self,_omega_0,_omega_i,_x_reflect):
         """
@@ -32,13 +35,15 @@ class Material():
         _x : Tensor
             f_r
         """
+        roughness = 1
+        _s = torch.tensor([0.3,0.3,0.3],device=self.device,dtype=self.dtype) 
+        
         _nomal = shape.get_nomal(_x_reflect)
         
         _h = (_omega_0 + _omega_i) / torch.norm(_omega_0 + _omega_i)
         _F = _s + (1 - _s) * 2 ** - (5.55473 * torch.dot(_omega_0,_h)+6.8316) * torch.dot(_omega_0,_h)
         k = (roughness + 1) ** 2 / 8
-        _G = torch.dot(torch.dot(_omega_0,_nomal) / (torch.dot(_omega_0,_nomal) * (1 - k) + k),
-                       torch.dot(_omega_i,_nomal) / (torch.dot(_omega_i,_nomal) * (1 - k) + k))
+        _G = torch.dot(_omega_0,_nomal) / (torch.dot(_omega_0,_nomal) * (1 - k) + k) * torch.dot(_omega_i,_nomal) / (torch.dot(_omega_i,_nomal) * (1 - k) + k)
         _M = (_F * _G) / (4 * torch.dot(_omega_0,_nomal) * torch.dot(_omega_i,_nomal))
         #_D = 
         #_f_s = _M * _D
@@ -48,6 +53,6 @@ class Material():
         return _f_r
     
 
-    def env_sphere_gaussian(self,_omega_i,i):
-        pass
+    def env_sphere_gaussian(self,i):
+        return torch.tensor([1,0,0],device=self.device,dtype=self.dtype), 0.5, torch.tensor([1,1,1],device=self.device,dtype=self.dtype)
         

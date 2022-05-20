@@ -1,9 +1,12 @@
-#物体の形状に関する要素の処理を行う
+import torch
 
 class Shape():
     
     def __init__(self) -> None:
         pass
+    
+    def sdf(self,_x):
+        return torch.norm(_x) - 1
     
     def get_nomal(self,_x):
         """
@@ -20,4 +23,5 @@ class Shape():
         _nomal : Tensor
             法線
         """
+        return _x / torch.norm(_x)
         
