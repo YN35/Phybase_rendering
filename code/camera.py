@@ -14,6 +14,8 @@ class Camera():
     def __init__(self) -> None:
         self.dtype = torch.float
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.width = 300
+        self.hight = 200
     
     def render(self):
         pass
@@ -41,13 +43,12 @@ class Camera():
         phi_lis = np.rand(ray_num) * math.pi
         z_lis = np.rand(ray_num)
         
-        #90度回転
         for i in range(ray_num):
             _omega_i = torch.tensor([math.sqrt(1-z_lis[i]**2) * math.cos(math.radians(phi_lis[i])),
                                      math.sqrt(1-z_lis[i]**2) * math.sin(math.radians(phi_lis[i])),
                                      z_lis[i]],device=self.device,dtype=self.dtype)
             
-            sigma = ray.incident_light(_omega_i) * mate.brdf(_omega_0,_omega_i) * torch.dot(_omega_i,_nomal_surface) + sigma
+            sigma = ray.incident_light(_omega_i) * mate.brdf(_omega_0,_omega_i,_x_reflect) * torch.dot(_omega_i,_nomal_surface) + sigma
             
         return sigma
         
