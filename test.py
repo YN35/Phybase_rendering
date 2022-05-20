@@ -11,8 +11,11 @@ b = torch.tensor([1,2,3],device=device,dtype=dtype)
 print(torch.mul(a,b))
 print(a*4)
 print(a*b)
+print(a**b)
 #内積
 print(torch.dot(a,b))
+
+print('ノルム',torch.norm(a))
 #引き算
 print(torch.sub(a,b))
 print(a-b)

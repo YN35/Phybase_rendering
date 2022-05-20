@@ -1,13 +1,16 @@
 import torch
-
+import util as utl
 from object.shape import Shape
+from object.material import Material
 
 shape = Shape()
+mate = Material()
 
 class Ray():
     
     def __init__(self) -> None:
-        pass
+        self.dtype = torch.float
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
     def ray_marching(self,_x_cam,_cam_dir,epsilon=0.001):
         """
@@ -52,5 +55,8 @@ class Ray():
         -------
             _l_i : RGBの入射光のデータ
         """
+        _l_i = torch.tensor([0,0,0],device=self.device,dtype=self.dtype)
         for i in range(num_sg):
-            sphere_gaussian(_omega_i)
+            _l_i = mate.env_sphere_gaussian(_omega_i,i) + _l_i
+        
+        return _l_i

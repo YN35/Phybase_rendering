@@ -47,7 +47,7 @@ class Camera():
                                      math.sqrt(1-z_lis[i]**2) * math.sin(math.radians(phi_lis[i])),
                                      z_lis[i]],device=self.device,dtype=self.dtype)
             
-            sigma = ray.incident_light(_omega_i) * shape.brdf(_omega_0,_omega_i) * torch.dot(_omega_i,_nomal_surface) + sigma
+            sigma = ray.incident_light(_omega_i) * mate.brdf(_omega_0,_omega_i) * torch.dot(_omega_i,_nomal_surface) + sigma
             
         return sigma
         
