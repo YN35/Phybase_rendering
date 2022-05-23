@@ -1,6 +1,9 @@
+from turtle import width
 import numpy as np
 import torch
 import math
+import matplotlib.pyplot as plt
+from PIL import Image
 from ray import Ray
 from object.material import Material
 from object.shape import Shape
@@ -14,12 +17,12 @@ class Camera():
     def __init__(self) -> None:
         self.dtype = torch.float
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.width = 300
-        self.hight = 200
+        self.width = 200
+        self.hight = 150
         self.fov = 90
-        self._main_cam_dir = torch.tensor([5,5,5],device=self.device,dtype=self.dtype)
-        self._main_cam_dir = self._main_cam_dir / torch.norm(self._main_cam_dir)
-        self._view_up = torch.tensor([1,0,0],device=self.device,dtype=self.dtype)#カメラをどっちを上とするか
+        self._cam_location = torch.tensor([5,0,0],device=self.device,dtype=self.dtype)
+        self._cam_dir = torch.tensor([-1,0,0],device=self.device,dtype=self.dtype)
+        self._view_up = torch.tensor([0,0,1],device=self.device,dtype=self.dtype)#カメラをどっちを上とするか
         self.void = torch.tensor([0,0,0],device=self.device,dtype=self.dtype)
         self.num_sg = 1
     
@@ -27,20 +30,32 @@ class Camera():
         """
         dads
         """
-        w_ini = math.sin(math.radians(self.fov / 2))
-        w = w_ini
-        h = w_ini * (self.hight / self.width)
-        w_delta = w_ini / (self.hight / 2)
-        h_delta = w_ini / (self.width / 2)
         # _cam_dir = torch.tensor([-1,-1,-1],device=self.device,dtype=self.dtype)
         # _cam_dir = _cam_dir / torch.norm(_cam_dir)
         # print(self.get_pixel_color(torch.tensor([5,5,5],device=self.device,dtype=self.dtype), _cam_dir, 1000))
-        for x_n in range(self.width):
-            for y_n in range(self.hight):
+        out_image = np.zeros((self.hight,self.width,3))
+        w = math.tan(math.radians(self.fov/2))
+        h = w * (self.hight / self.width)
+        _Z =  -(self._cam_dir / torch.norm(self._cam_dir))
+        _X = torch.cross(self._view_up,_Z)
+        _Y = torch.cross(_Z,_X)
+        _u = 2 * w * _X
+        _v = 2 * h * _Y
+        _w = - w*_X - h*_Y - _Z
+        for x in range(self.width):
+            for y in range(self.hight):
+            
+                _p = _u * (x / self.width) + _v * (y / self.hight) + _w
+                out_image[y,x,:] = self.get_pixel_color(self._cam_location, _p, 1000).to('cpu').detach().numpy().copy()
+            print(x,y,out_image[y,x,:],_p)
                 
-            w = w + w_delta
-            h = h + h_delta
-                
+        fig, ax = plt.subplots()
+        ax.imshow(out_image)
+        fig.savefig("out_image.png")
+        np.save('out_image', out_image)
+        Image.fromarray(out_image.astype(np.uint8)).save("out_image.bmp")
+        
+        return out_image
         
             
     def get_pixel_color(self,_x_cam,_cam_dir,ray_num):

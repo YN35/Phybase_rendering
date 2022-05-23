@@ -14,6 +14,8 @@ print(a*b)
 print(a**b)
 #内積
 print(torch.dot(a,b))
+#外積
+print(torch.cross(torch.tensor([1,0,0],device=device,dtype=dtype),torch.tensor([0,1,0],device=device,dtype=dtype)))
 
 print('ノルム',torch.norm(a))
 #引き算

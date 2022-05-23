@@ -10,12 +10,11 @@ class Material():
         self.dtype = torch.float
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         
-        self._lobe_dir = torch.tensor([1,0,0],device=self.device,dtype=self.dtype)
         self.sharpness = 0.5
-        self._intensity = torch.tensor([0.1,0.5,0.5],device=self.device,dtype=self.dtype)
+        self._intensity = torch.tensor([0.5,0.3,0.3],device=self.device,dtype=self.dtype)
         
     def albedo(self,_x):
-        return torch.tensor([1,1,1],device=self.device,dtype=self.dtype) 
+        return torch.tensor([0.7,0.4,0.4],device=self.device,dtype=self.dtype) 
     
     def brdf(self,_omega_0,_omega_i,_x_reflect):
         """
@@ -54,5 +53,5 @@ class Material():
     
 
     def env_sphere_gaussian(self,i):
-        return torch.tensor([1,0,0],device=self.device,dtype=self.dtype), 0.5, torch.tensor([1,1,1],device=self.device,dtype=self.dtype)
+        return torch.tensor([0.8,0.8,0],device=self.device,dtype=self.dtype), 0.5, torch.tensor([1,1,1],device=self.device,dtype=self.dtype)
         
