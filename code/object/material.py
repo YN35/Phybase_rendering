@@ -10,11 +10,11 @@ class Material():
         self.dtype = torch.float
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         
-        self.sharpness = 0.5
-        self._intensity = torch.tensor([0.5,0.3,0.3],device=self.device,dtype=self.dtype)
+        self.sharpness = 0.8
+        self._intensity = torch.tensor([0.5,0.5,0.5],device=self.device,dtype=self.dtype)#反射率大きいほど反射する
         
     def albedo(self,_x):
-        return torch.tensor([0.7,0.4,0.4],device=self.device,dtype=self.dtype) 
+        return torch.tensor([0.2,0.2,0.2],device=self.device,dtype=self.dtype) 
     
     def brdf(self,_omega_0,_omega_i,_x_reflect):
         """
@@ -34,14 +34,15 @@ class Material():
         _x : Tensor
             f_r
         """
-        roughness = 1
-        _s = torch.tensor([0.3,0.3,0.3],device=self.device,dtype=self.dtype) 
+        #1に近いほど金属っぽくてかてかする
+        roughness = 0.9
+        _s = torch.tensor([0.2,0.2,0.2],device=self.device,dtype=self.dtype) 
         
         _nomal = shape.get_nomal(_x_reflect)
         
         _h = (_omega_0 + _omega_i) / torch.norm(_omega_0 + _omega_i)
         _F = _s + (1 - _s) * 2 ** - (5.55473 * torch.dot(_omega_0,_h)+6.8316) * torch.dot(_omega_0,_h)
-        k = (roughness + 1) ** 2 / 8
+        k = ((roughness + 1) ** 2) / 8
         _G = torch.dot(_omega_0,_nomal) / (torch.dot(_omega_0,_nomal) * (1 - k) + k) * torch.dot(_omega_i,_nomal) / (torch.dot(_omega_i,_nomal) * (1 - k) + k)
         _M = (_F * _G) / (4 * torch.dot(_omega_0,_nomal) * torch.dot(_omega_i,_nomal))
         #_D = 
@@ -53,5 +54,4 @@ class Material():
     
 
     def env_sphere_gaussian(self,i):
-        return torch.tensor([0.8,0.8,0],device=self.device,dtype=self.dtype), 0.5, torch.tensor([1,1,1],device=self.device,dtype=self.dtype)
-        
+        return torch.tensor([0,0,1],device=self.device,dtype=self.dtype), 0.7, torch.tensor([0.5,0.5,0.5],device=self.device,dtype=self.dtype)

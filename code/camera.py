@@ -17,9 +17,9 @@ class Camera():
     def __init__(self) -> None:
         self.dtype = torch.float
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.width = 200
-        self.hight = 150
-        self.fov = 90
+        self.width = 150
+        self.hight = 75
+        self.fov = 70
         self._cam_location = torch.tensor([5,0,0],device=self.device,dtype=self.dtype)
         self._cam_dir = torch.tensor([-1,0,0],device=self.device,dtype=self.dtype)
         self._view_up = torch.tensor([0,0,1],device=self.device,dtype=self.dtype)#カメラをどっちを上とするか
@@ -46,9 +46,15 @@ class Camera():
             for y in range(self.hight):
             
                 _p = _u * (x / self.width) + _v * (y / self.hight) + _w
-                out_image[y,x,:] = self.get_pixel_color(self._cam_location, _p, 1000).to('cpu').detach().numpy().copy()
+                out_image[y,x,:] = self.get_pixel_color(self._cam_location, _p, 500).to('cpu').detach().numpy().copy()
             print(x,y,out_image[y,x,:],_p)
-                
+        
+        max = np.max(out_image)
+        min = np.min(out_image)
+        out_image = np.where(out_image == 0., min - (max/4), out_image)
+        out_image[0,0,:] = max + (max/4)
+        out_image = out_image - np.min(out_image)
+        out_image = out_image * (255 / np.max(out_image))
         fig, ax = plt.subplots()
         ax.imshow(out_image)
         fig.savefig("out_image.png")
@@ -90,7 +96,7 @@ class Camera():
             
             sigma = ray.incident_light(_omega_i,self.num_sg) * mate.brdf(_omega_0,_omega_i,_x_reflect) * torch.dot(_omega_i,_nomal_surface) + sigma
             
-        return sigma
+        return sigma / ray_num
         
         
         
