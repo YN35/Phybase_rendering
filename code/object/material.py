@@ -54,4 +54,4 @@ class Material():
     
 
     def env_sphere_gaussian(self,i):
-        return torch.tensor([0,0,1],device=self.device,dtype=self.dtype), 0.7, torch.tensor([0.5,0.5,0.5],device=self.device,dtype=self.dtype)
+        return torch.tensor([0,0,-1],device=self.device,dtype=self.dtype), 0.7, torch.tensor([0.5,0.5,0.5],device=self.device,dtype=self.dtype)

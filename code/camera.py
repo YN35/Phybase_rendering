@@ -1,4 +1,3 @@
-from turtle import width
 import numpy as np
 import torch
 import math
@@ -25,6 +24,25 @@ class Camera():
         self._view_up = torch.tensor([0,0,1],device=self.device,dtype=self.dtype)#カメラをどっちを上とするか
         self.void = torch.tensor([0,0,0],device=self.device,dtype=self.dtype)
         self.num_sg = 1
+        
+    def save_image(self,out_image):
+        
+        Image.fromarray(out_image.astype(np.uint8)).save("out_image.bmp")
+        np.save('out_image', out_image)
+        
+    def filter(self,out_image):
+        
+        q90, q10 = np.percentile(out_image, [99 ,1])
+        iqr = q90 - q10
+        out_image = np.where(out_image == 0., q10 - (iqr/4), out_image)
+        out_image = np.where(out_image > q90 + (iqr/4), q90 + (iqr/4), out_image)
+        out_image = np.where(out_image < q10 - (iqr/4), q10 - (iqr/4), out_image)
+        out_image[0,0,:] = q90 + (iqr/4)
+        out_image = out_image - np.min(out_image)
+        out_image = out_image * (255 / np.max(out_image))
+        
+        return out_image
+    
     
     def render(self):
         """
@@ -49,18 +67,7 @@ class Camera():
                 out_image[y,x,:] = self.get_pixel_color(self._cam_location, _p, 500).to('cpu').detach().numpy().copy()
             print(x,y,out_image[y,x,:],_p)
         
-        max = np.max(out_image)
-        min = np.min(out_image)
-        out_image = np.where(out_image == 0., min - (max/4), out_image)
-        out_image[0,0,:] = max + (max/4)
-        out_image = out_image - np.min(out_image)
-        out_image = out_image * (255 / np.max(out_image))
-        fig, ax = plt.subplots()
-        ax.imshow(out_image)
-        fig.savefig("out_image.png")
-        np.save('out_image', out_image)
-        Image.fromarray(out_image.astype(np.uint8)).save("out_image.bmp")
-        
+        # np.save('raw_out_image', out_image)
         return out_image
         
             
