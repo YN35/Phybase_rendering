@@ -3,6 +3,7 @@ import torch
 import math
 import matplotlib.pyplot as plt
 from PIL import Image
+import util
 from ray import Ray
 from object.material import Material
 from object.shape import Shape
@@ -16,8 +17,8 @@ class Camera():
     def __init__(self) -> None:
         self.dtype = torch.float
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.width = 160
-        self.hight = 80
+        self.width = 1000
+        self.hight = 500
         self.fov = 70
         self._cam_location = torch.tensor([5,0,0],device=self.device,dtype=self.dtype)
         self._cam_dir = torch.tensor([-1,0,0],device=self.device,dtype=self.dtype)
@@ -62,9 +63,12 @@ class Camera():
         _w = - w*_X - h*_Y - _Z
         for x in range(self.width):
             for y in range(self.hight):
+                
+                # x = 80
+                # y = 45
             
                 _p = _u * (x / self.width) + _v * (y / self.hight) + _w
-                out_image[y,x,:] = self.get_pixel_color(self._cam_location, _p, 500).to('cpu').detach().numpy().copy()
+                out_image[y,x,:] = self.get_pixel_color(self._cam_location, _p, 10).to('cpu').detach().numpy().copy()
             print(x,y,out_image[y,x,:],_p)
         
         # np.save('raw_out_image', out_image)
@@ -83,7 +87,6 @@ class Camera():
         ray_num : float
             入ってくる光を計算する方向を計算する数(ray_num)
         """
-        sigma = 0
         
         #反射面の座標を算出
         _x_reflect = ray.ray_marching(_x_cam,_cam_dir)
@@ -91,20 +94,26 @@ class Camera():
             return self.void
         
         _nomal_surface = shape.get_nomal(_x_reflect)
+        _nomal_surface_num = _nomal_surface.to('cpu').detach().numpy().copy()
         #面から見たカメラの方向
-        _omega_0 = _cam_dir - _x_reflect
-        _omega_0 = _omega_0 / torch.norm(_omega_0)
+        _omega_0 = _x_cam - _x_reflect
+        _omega_0 = util.normalize(_omega_0)
         
-        phi_lis = np.random.rand(ray_num) * math.pi
-        z_lis = np.random.rand(ray_num)
+        #半球状にプロット
+        plots = util.plot_half_sphere(ray_num)
+        theta = -util.angle(_nomal_surface_num,np.array([0,0,1]))
+        plots = util.rotate_vec(plots, np.cross(_nomal_surface_num,np.array([0,0,1])), theta)
+        
         for i in range(ray_num):
-            _omega_i = torch.tensor([math.sqrt(1-z_lis[i]**2) * math.cos(math.radians(phi_lis[i])),
-                                     math.sqrt(1-z_lis[i]**2) * math.sin(math.radians(phi_lis[i])),
-                                     z_lis[i]],device=self.device,dtype=self.dtype)
-            
-            _omega_i = _omega_i / torch.norm(_omega_i)
-            
+            plots[:,i] = plots[:,i] / np.linalg.norm(plots[:,i])
+        
+        sigma = 0
+        for i in range(ray_num):
+            _omega_i = torch.tensor([plots[0,i],plots[1,i],plots[2,i]],device=self.device,dtype=self.dtype)
             sigma = ray.incident_light(_omega_i,self.num_sg) * mate.brdf(_omega_0,_omega_i,_x_reflect) * torch.dot(_omega_i,_nomal_surface) + sigma
+            
+            if np.count_nonzero(np.isnan(sigma.to('cpu').detach().numpy().copy())) > 0 or np.count_nonzero(np.isinf(sigma.to('cpu').detach().numpy().copy())) > 0:
+                print('dsadjaskdklja')
             
         return sigma / ray_num
         

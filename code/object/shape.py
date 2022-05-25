@@ -21,7 +21,7 @@ class Shape():
         Returns
         -------
         _nomal : Tensor
-            法線
+            法線 正規化済み
         """
         return _x / torch.norm(_x)
         
