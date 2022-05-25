@@ -10,8 +10,8 @@ class Material():
         self.dtype = torch.float
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         
-        self.sharpness = 0.8
-        self._intensity = torch.tensor([0.5,0.5,0.5],device=self.device,dtype=self.dtype)#反射率大きいほど反射する
+        self.sharpness = 0.9
+        self._intensity = torch.tensor([0.7,0.7,0.7],device=self.device,dtype=self.dtype)#反射率大きいほど反射する
         
     def albedo(self,_x):
         return torch.tensor([0.2,0.2,0.2],device=self.device,dtype=self.dtype) 
@@ -23,7 +23,7 @@ class Material():
         Parameters
         ----------
         _omega_0 : Tensor
-            カメラの座標
+            カメラの方向(面からの)
         _omega_i : Tensor
             計算している入射光の方向
         _x_reflect : Tensor
@@ -39,6 +39,7 @@ class Material():
         _s = torch.tensor([0.2,0.2,0.2],device=self.device,dtype=self.dtype) 
         
         _nomal = shape.get_nomal(_x_reflect)
+        _nomal = _nomal / torch.norm(_nomal)
         
         _h = (_omega_0 + _omega_i) / torch.norm(_omega_0 + _omega_i)
         _F = _s + (1 - _s) * 2 ** - (5.55473 * torch.dot(_omega_0,_h)+6.8316) * torch.dot(_omega_0,_h)
@@ -54,4 +55,5 @@ class Material():
     
 
     def env_sphere_gaussian(self,i):
-        return torch.tensor([0,0,-1],device=self.device,dtype=self.dtype), 0.7, torch.tensor([0.5,0.5,0.5],device=self.device,dtype=self.dtype)
+        #_lobe_dir, sharpness, _intensity
+        return torch.tensor([1,0,1],device=self.device,dtype=self.dtype), 0.8, torch.tensor([0.5,0.5,0.5],device=self.device,dtype=self.dtype)

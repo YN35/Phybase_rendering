@@ -16,8 +16,8 @@ class Camera():
     def __init__(self) -> None:
         self.dtype = torch.float
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.width = 150
-        self.hight = 75
+        self.width = 160
+        self.hight = 80
         self.fov = 70
         self._cam_location = torch.tensor([5,0,0],device=self.device,dtype=self.dtype)
         self._cam_dir = torch.tensor([-1,0,0],device=self.device,dtype=self.dtype)
@@ -93,6 +93,7 @@ class Camera():
         _nomal_surface = shape.get_nomal(_x_reflect)
         #面から見たカメラの方向
         _omega_0 = _cam_dir - _x_reflect
+        _omega_0 = _omega_0 / torch.norm(_omega_0)
         
         phi_lis = np.random.rand(ray_num) * math.pi
         z_lis = np.random.rand(ray_num)
@@ -100,6 +101,8 @@ class Camera():
             _omega_i = torch.tensor([math.sqrt(1-z_lis[i]**2) * math.cos(math.radians(phi_lis[i])),
                                      math.sqrt(1-z_lis[i]**2) * math.sin(math.radians(phi_lis[i])),
                                      z_lis[i]],device=self.device,dtype=self.dtype)
+            
+            _omega_i = _omega_i / torch.norm(_omega_i)
             
             sigma = ray.incident_light(_omega_i,self.num_sg) * mate.brdf(_omega_0,_omega_i,_x_reflect) * torch.dot(_omega_i,_nomal_surface) + sigma
             
