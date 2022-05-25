@@ -25,10 +25,10 @@ class Camera():
         self.void = torch.tensor([0,0,0],device=self.device,dtype=self.dtype)
         self.num_sg = 1
         
-    def save_image(self,out_image):
+    def save_image(self,out_image, name):
         
-        Image.fromarray(out_image.astype(np.uint8)).save("out_image.bmp")
-        np.save('out_image', out_image)
+        Image.fromarray(out_image.astype(np.uint8)).save(name+".bmp")
+        np.save(name, out_image)
         
     def filter(self,out_image):
         
@@ -52,6 +52,7 @@ class Camera():
         # _cam_dir = _cam_dir / torch.norm(_cam_dir)
         # print(self.get_pixel_color(torch.tensor([5,5,5],device=self.device,dtype=self.dtype), _cam_dir, 1000))
         out_image = np.zeros((self.hight,self.width,3))
+        sdf_image = np.zeros((self.hight,self.width))
         w = math.tan(math.radians(self.fov/2))
         h = w * (self.hight / self.width)
         _Z =  -(self._cam_dir / torch.norm(self._cam_dir))
@@ -64,11 +65,12 @@ class Camera():
             for y in range(self.hight):
             
                 _p = _u * (x / self.width) + _v * (y / self.hight) + _w
-                out_image[y,x,:] = self.get_pixel_color(self._cam_location, _p, 500).to('cpu').detach().numpy().copy()
+                out, sdf_image[y][x] = self.get_pixel_color(self._cam_location, _p, 500)
+                out_image[y,x,:] = out.to('cpu').detach().numpy().copy()
             print(x,y,out_image[y,x,:],_p)
         
         # np.save('raw_out_image', out_image)
-        return out_image
+        return out_image, sdf_image
         
             
     def get_pixel_color(self,_x_cam,_cam_dir,ray_num):
@@ -86,9 +88,9 @@ class Camera():
         sigma = 0
         
         #反射面の座標を算出
-        _x_reflect = ray.ray_marching(_x_cam,_cam_dir)
+        _x_reflect, sdf = ray.ray_marching(_x_cam,_cam_dir)
         if _x_reflect == 'nothing':
-            return self.void
+            return self.void, 0
         
         _nomal_surface = shape.get_nomal(_x_reflect)
         #面から見たカメラの方向
@@ -106,7 +108,7 @@ class Camera():
             
             sigma = ray.incident_light(_omega_i,self.num_sg) * mate.brdf(_omega_0,_omega_i,_x_reflect) * torch.dot(_omega_i,_nomal_surface) + sigma
             
-        return sigma / ray_num
+        return sigma / ray_num, sdf
         
         
         

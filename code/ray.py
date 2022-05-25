@@ -37,9 +37,9 @@ class Ray():
             _x = _x + (_cam_dir * sdf)
             sdf = shape.sdf(_x)
             if sdf == torch.tensor(float('inf'),device=self.device,dtype=self.dtype):
-                return 'nothing'
+                return 'nothing', 0
             
-        return _x
+        return _x, sdf
         
     
     def incident_light(self,_omega_i,num_sg):
